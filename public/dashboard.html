@@ -1,0 +1,632 @@
+<!--
+    ============================================================================
+    PLATEFORME DE COURS - VANILLA JAVASCRIPT DASHBOARD
+    ============================================================================
+    
+    FILE: public/dashboard.html
+    PURPOSE: Responsive HTML template for student dashboard
+    
+    FEATURES:
+    - Statistics cards (credits, GPA, active courses, class)
+    - Recent courses list with download buttons
+    - Daily schedule display
+    - Real-time alerts and notifications
+    - Mobile-first responsive design
+    - Sidebar navigation
+    
+    STRUCTURE:
+    - Sidebar (navigation menu)
+    - Main content area (statistics, courses, schedule)
+    - Alert container (for notifications)
+    
+    DEPENDENCIES:
+    - dashboard.js (logic and API calls)
+    - No external frameworks (pure HTML/CSS)
+    
+    ENDPOINTS CALLED:
+    - GET /api/etudiant/mes-cours (fetch courses)
+    - GET /api/etudiant/cours/{id}/download (download file)
+    
+    STYLING:
+    - CSS Variables for theming (:root)
+    - CSS Grid for statistics
+    - Flexbox for layouts
+    - Media queries for responsive design
+    - Animations (spinner, slide-in alerts)
+    
+    AUTHOR: Development Team
+    DATE: December 21, 2025
+    VERSION: 1.0
+    ============================================================================
+-->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Plateforme de Cours</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --color-primary: #4f46e5;
+            --color-primary-light: #eef2ff;
+            --color-primary-dark: #3730a3;
+            --color-success: #22c55e;
+            --color-success-light: #dcfce7;
+            --color-warning: #f59e0b;
+            --color-warning-light: #fef3c7;
+            --color-danger: #ef4444;
+            --color-danger-light: #fee2e2;
+            --color-info: #3b82f6;
+            --color-info-light: #dbeafe;
+            --color-gray-100: #f3f4f6;
+            --color-gray-200: #e5e7eb;
+            --color-gray-300: #d1d5db;
+            --color-gray-500: #6b7280;
+            --color-gray-700: #374151;
+            --color-gray-900: #111827;
+            --color-white: #ffffff;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --border-radius: 0.5rem;
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--color-gray-100);
+            color: var(--color-gray-900);
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Layout principal */
+        .main-content {
+            display: flex;
+            gap: 2rem;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: var(--color-white);
+            border-right: 1px solid var(--color-gray-200);
+            padding: 1.5rem;
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .content {
+            margin-left: 250px;
+            flex: 1;
+            padding: 2rem;
+            background: var(--color-gray-100);
+        }
+
+        .sidebar h1 {
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+            color: var(--color-primary);
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-menu li {
+            margin-bottom: 0.5rem;
+        }
+
+        .nav-menu a {
+            display: block;
+            padding: 0.75rem 1rem;
+            color: var(--color-gray-700);
+            text-decoration: none;
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+        }
+
+        .nav-menu a:hover {
+            background: var(--color-primary-light);
+            color: var(--color-primary);
+        }
+
+        .nav-menu a.active {
+            background: var(--color-primary);
+            color: var(--color-white);
+        }
+
+        /* Espace principal */
+        .space-y-8 {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* Messages d'erreur */
+        .alert {
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-start;
+            animation: slideIn 0.3s ease;
+        }
+
+        .alert.error {
+            background: var(--color-danger-light);
+            border: 1px solid var(--color-danger);
+            color: var(--color-danger);
+        }
+
+        .alert.success {
+            background: var(--color-success-light);
+            border: 1px solid var(--color-success);
+            color: var(--color-success);
+        }
+
+        .alert.info {
+            background: var(--color-info-light);
+            border: 1px solid var(--color-info);
+            color: var(--color-info);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Grille de statistiques */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--color-white);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--color-gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            transition: var(--transition);
+        }
+
+        .stat-card:hover {
+            box-shadow: var(--shadow-md);
+            border-color: var(--color-primary);
+        }
+
+        .stat-card h3 {
+            font-size: 0.875rem;
+            color: var(--color-gray-500);
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .stat-card .value {
+            font-size: 1.875rem;
+            font-weight: bold;
+            color: var(--color-gray-900);
+        }
+
+        .stat-icon {
+            width: 2rem;
+            height: 2rem;
+            flex-shrink: 0;
+        }
+
+        /* Section des cours */
+        .section {
+            background: var(--color-white);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--color-gray-200);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--color-gray-200);
+        }
+
+        .section-title {
+            font-size: 1.125rem;
+            font-weight: bold;
+            color: var(--color-gray-900);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-title svg {
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+
+        .link-all {
+            font-size: 0.875rem;
+            color: var(--color-primary);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .link-all:hover {
+            color: var(--color-primary-dark);
+        }
+
+        /* Loading spinner */
+        .loading-container {
+            text-align: center;
+            padding: 2rem;
+            color: var(--color-gray-500);
+        }
+
+        .spinner {
+            width: 2rem;
+            height: 2rem;
+            border: 4px solid var(--color-primary);
+            border-top-color: transparent;
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Liste vide */
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: var(--color-gray-500);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .empty-state svg {
+            width: 3rem;
+            height: 3rem;
+            opacity: 0.3;
+        }
+
+        /* Liste des cours */
+        .courses-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .course-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border: 1px solid var(--color-gray-200);
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+        }
+
+        .course-item:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .course-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex: 1;
+        }
+
+        .course-avatar {
+            width: 3rem;
+            height: 3rem;
+            background: var(--color-info-light);
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-info);
+            font-weight: bold;
+            font-size: 1.125rem;
+            flex-shrink: 0;
+        }
+
+        .course-details h4 {
+            font-weight: 600;
+            color: var(--color-gray-900);
+            margin-bottom: 0.25rem;
+        }
+
+        .course-details p {
+            font-size: 0.875rem;
+            color: var(--color-gray-500);
+        }
+
+        .btn {
+            padding: 0.5rem 0.75rem;
+            background: var(--color-primary);
+            color: var(--color-white);
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            background: var(--color-primary-dark);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn:disabled {
+            background: var(--color-gray-300);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        /* Horaire */
+        .schedule-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .schedule-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--color-gray-200);
+        }
+
+        .schedule-item:last-child {
+            border-bottom: none;
+        }
+
+        .schedule-time {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .schedule-time h4 {
+            font-weight: 600;
+            color: var(--color-gray-900);
+        }
+
+        .schedule-time p {
+            font-size: 0.875rem;
+            color: var(--color-gray-500);
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge.active {
+            background: var(--color-success-light);
+            color: var(--color-success);
+        }
+
+        .badge.pending {
+            background: var(--color-info-light);
+            color: var(--color-info);
+        }
+
+        .badge.later {
+            background: var(--color-gray-100);
+            color: var(--color-gray-700);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                position: static;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid var(--color-gray-200);
+            }
+
+            .content {
+                margin-left: 0;
+                padding: 1rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .course-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .course-info {
+                width: 100%;
+                margin-bottom: 1rem;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-content">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <h1>📚 Plateforme</h1>
+            <nav>
+                <ul class="nav-menu">
+                    <li><a href="/etudiant/dashboard" class="active">Dashboard</a></li>
+                    <li><a href="/etudiant/mes-cours">Mes Cours</a></li>
+                    <li><a href="/etudiant/calendar">Calendrier</a></li>
+                    <li><a href="/etudiant/documents">Documents</a></li>
+                    <li><a href="/etudiant/notes">Mes Notes</a></li>
+                    <li><a href="/logout">Déconnexion</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Contenu principal -->
+        <main class="content">
+            <!-- Conteneur des messages d'erreur -->
+            <div id="alertContainer"></div>
+
+            <!-- Espace principal -->
+            <div class="space-y-8">
+                
+                <!-- Grille de statistiques -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div>
+                            <h3>Crédits complétés</h3>
+                            <div class="value" id="creditsCompleted">120/144</div>
+                        </div>
+                        <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M6 9c0-1 1-2 2-2h8c1 0 2 1 2 2v8c0 1-1 2-2 2H8c-1 0-2-1-2-2V9z"></path>
+                            <path d="M9 5v3M15 5v3"></path>
+                        </svg>
+                    </div>
+                    <div class="stat-card">
+                        <div>
+                            <h3>Moyenne générale</h3>
+                            <div class="value" id="gpa">3.75/4.0</div>
+                        </div>
+                        <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #22c55e;">
+                            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                            <polyline points="17 6 23 6 23 12"></polyline>
+                        </svg>
+                    </div>
+                    <div class="stat-card">
+                        <div>
+                            <h3>Cours actifs</h3>
+                            <div class="value" id="activeCourses">0</div>
+                        </div>
+                        <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #3b82f6;">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                        </svg>
+                    </div>
+                    <div class="stat-card">
+                        <div>
+                            <h3>Classe</h3>
+                            <div class="value">Gr. 1</div>
+                        </div>
+                        <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #a855f7;">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Cours récents -->
+                <div class="section">
+                    <div class="section-header">
+                        <h2 class="section-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #3b82f6;">
+                                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                            </svg>
+                            Cours récents
+                        </h2>
+                        <a href="/etudiant/mes-cours" class="link-all">Voir tous →</a>
+                    </div>
+
+                    <!-- Conteneur de chargement -->
+                    <div id="coursesContainer"></div>
+                </div>
+
+                <!-- Horaire du jour -->
+                <div class="section">
+                    <h2 class="section-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #f59e0b;">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        Horaire d'aujourd'hui
+                    </h2>
+                    <div class="schedule-list">
+                        <div class="schedule-item">
+                            <div class="schedule-time">
+                                <h4>Programmation Python</h4>
+                                <p>08:00 - 10:00</p>
+                            </div>
+                            <span class="badge active">En cours</span>
+                        </div>
+                        <div class="schedule-item">
+                            <div class="schedule-time">
+                                <h4>Bases de Données</h4>
+                                <p>10:30 - 12:30</p>
+                            </div>
+                            <span class="badge pending">À venir</span>
+                        </div>
+                        <div class="schedule-item">
+                            <div class="schedule-time">
+                                <h4>Algèbre Linéaire</h4>
+                                <p>14:00 - 16:00</p>
+                            </div>
+                            <span class="badge later">Plus tard</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Script principal -->
+    <script src="dashboard.js"></script>
+</body>
+</html>
