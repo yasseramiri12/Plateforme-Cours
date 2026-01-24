@@ -2,102 +2,193 @@
 
 <div align="center">
 
-![Laravel](https://img.shields.io/badge/Laravel-11-red?logo=laravel)
+A modern, full-stack Learning Management System built with Laravel and React for managing courses, students, and educational content.
+
+![Laravel](https://img.shields.io/badge/Laravel-12-red?logo=laravel)
 ![React](https://img.shields.io/badge/React-18-blue?logo=react)
-![Node](https://img.shields.io/badge/Node-20.19+-green?logo=node.js)
 ![PHP](https://img.shields.io/badge/PHP-8.2+-purple?logo=php)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3-38B2AC?logo=tailwind-css)
 ![Status](https://img.shields.io/badge/Status-Active-brightgreen)
 
 </div>
 
-## 🎯 Overview
+---
 
-**Plateforme de Cours** is a modern Learning Management System designed for students and teachers to manage courses, documents, and schedules efficiently.
+## 🎯 About
 
-### ✨ Key Features
+**Plateforme de Cours** is a comprehensive Learning Management System (LMS) designed for educational institutions. It enables students and teachers to manage courses, course materials, schedules, and assignments in a single, intuitive platform.
 
-- 📊 **Dashboard** - Real-time statistics and course overview
-- 📚 **Course Management** - Browse and download course materials
-- 📅 **Calendar** - Schedule and event management
-- 📥 **Document Downloads** - PDFs, videos, and course materials
-- 🔐 **Authentication** - Secure login with token-based auth
-- 📱 **Responsive** - Mobile-first design for all devices
-- ⚡ **Zero Dependencies** - Vanilla JS version available
+## ✨ Key Features
+
+- **👨‍🎓 Student Management** - Manage student profiles, enrollments, and groups
+- **👨‍🏫 Teacher Dashboard** - Assign courses and manage course content
+- **📚 Course Management** - Create, organize, and manage courses and modules
+- **📄 Document Management** - Upload and download course materials
+- **📅 Class Scheduling** - Manage class schedules and timetables
+- **🔐 Role-Based Access** - Secure authentication with admin, teacher, and student roles
+- **📊 Analytics** - Track student progress and course statistics
+- **📱 Responsive Design** - Mobile-friendly interface
 
 ---
 
 ## 🏗️ Technology Stack
 
 ### Backend
-- **Framework**: Laravel 11 (PHP 8.2+)
-- **Authentication**: Laravel Sanctum (Session + Bearer Token)
-- **Database**: MySQL 8.0 / SQLite
-- **ORM**: Eloquent
+- **PHP 8.2+** with **Laravel 12** Framework
+- **Laravel Sanctum** for API authentication
+- **Eloquent ORM** for database management
+- **MySQL 8.0** database
 
 ### Frontend
-- **Framework**: React 18
-- **SSR**: Inertia.js
-- **Styling**: Tailwind CSS
-- **Build Tool**: Vite
-- **HTTP Client**: Axios
+- **React 18** with **Inertia.js** for server-driven UI
+- **Tailwind CSS 3** for responsive styling
+- **Vite** as modern build tool
+- **Axios** for HTTP requests
 
-### Static Pages
-- **Pure Vanilla JavaScript** (No dependencies)
-- **HTML5** + **CSS3** (CSS Variables, Grid, Flexbox)
-- **Fetch API** for HTTP requests
+### Development Tools
+- **Composer** for PHP dependencies
+- **NPM** for JavaScript dependencies
+- **Laravel Artisan** CLI
 
 ---
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-```bash
-- PHP 8.2+
-- Node.js 20.19+
-- MySQL 8.0 or SQLite
-- Composer
+```
+PHP 8.2+
+Node.js 20.19+
+Composer
+MySQL 8.0 (or SQLite for development)
+Git
 ```
 
-### Installation
+### Installation Steps
 
 ```bash
-# 1. Clone & Navigate
-git clone <repo-url>
+# 1. Clone the repository
+git clone https://github.com/yourusername/plateforme-cours.git
 cd plateforme-cours
 
-# 2. Install Dependencies
+# 2. Install dependencies
 composer install
 npm install
 
-# 3. Setup Environment
+# 3. Setup environment configuration
 cp .env.example .env
 php artisan key:generate
 
-# 4. Database Setup
+# 4. Setup database
 php artisan migrate
 php artisan db:seed
 
-# 5. Create Storage Link
+# 5. Create storage link
 php artisan storage:link
 
-# 6. Build Assets
+# 6. Build frontend assets
 npm run build
 
-# 7. Start Development
-# Terminal 1: Laravel Server
+# 7. Start the application
 php artisan serve
-
-# Terminal 2: Vite Hot Reload
+# In another terminal:
 npm run dev
 ```
 
-### Access Application
+### Access the Application
+- **Main Application**: http://localhost:8000
+- **Login**: http://localhost:8000/login
+- **Dashboard**: http://localhost:8000/dashboard
 
-| URL | Purpose |
-|-----|---------|
-| `http://localhost:8000` | Web application |
-| `http://localhost:8000/dashboard.html` | Vanilla JS dashboard |
-| `http://localhost:8000/login` | Student login |
+---
+
+## 📁 Project Structure
+
+```
+plateforme-cours/
+├── app/
+│   ├── Http/Controllers/          # API & Web Controllers
+│   ├── Models/                    # Eloquent Models
+│   └── Providers/                 # Service Providers
+├── database/
+│   ├── migrations/                # Database Migrations
+│   ├── seeders/                   # Database Seeders
+│   └── factories/                 # Model Factories
+├── resources/
+│   ├── js/                        # React Components
+│   ├── css/                       # Tailwind Styles
+│   └── views/                     # Blade Views
+├── routes/
+│   ├── api.php                    # API Routes
+│   └── web.php                    # Web Routes
+├── public/                        # Static Assets
+└── config/                        # Configuration Files
+```
+
+---
+
+## 🔧 Available Commands
+
+```bash
+# Development
+php artisan serve              # Start Laravel server
+npm run dev                    # Start Vite dev server
+npm run build                  # Build frontend assets
+
+# Database
+php artisan migrate            # Run migrations
+php artisan db:seed           # Seed the database
+php artisan migrate:fresh     # Reset & migrate database
+
+# Utilities
+php artisan tinker            # Interactive shell
+php artisan queue:work        # Process queue jobs
+```
+
+---
+
+## 👥 User Roles
+
+- **Admin** - Full system access, user and course management
+- **Professor** - Create and manage courses, assign grades
+- **Student** - Enroll in courses, download materials, submit assignments
+
+---
+
+## 📝 Database Schema
+
+Key tables include:
+- `users` - User accounts (admin, professors, students)
+- `etudiants` - Student profiles
+- `professeurs` - Professor profiles
+- `cours` - Courses
+- `modules` - Course modules
+- `filieres` - Study programs/branches
+- `groupes` - Student groups/classes
+- `enseigner` - Course-Professor relationships
+- `programme` - Program-Module relationships
+- `diffusion` - Course distribution to groups
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+---
+
+## 📧 Support
+
+For support, email support@plateformecours.com or open an issue on GitHub.
+
+---
+
+**Built with ❤️ for educational excellence**
 | `http://localhost:8000/etudiant/dashboard` | Student dashboard |
 
 ---
